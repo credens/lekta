@@ -1,0 +1,24 @@
+# macOS
+.DS_Store
+*.swp
+
+# Xcode
+*.xcodeproj/xcuserdata/
+*.xcworkspace/xcuserdata/
+DerivedData/
+build/
+
+# Android
+LektaAndroid/.gradle/
+LektaAndroid/build/
+LektaAndroid/app/build/
+LektaAndroid/local.properties
+*.apk
+*.aab
+
+# IDE
+.idea/
+*.iml
+
+# Claude
+.claude/
