@@ -1,0 +1,181 @@
+@startuml LektaComponents
+title Lekta - Componentes y conexiones
+skinparam componentStyle rectangle
+
+actor Operador as operator
+node "iOS app\nSwiftUI" as ios {
+  component "MPAuthService" as mpAuth
+  component "BackendSessionService" as session
+  component "BackendAuthService" as auth
+  component "BackendCheckoutService" as checkout
+  component "MercadoPagoService\n(backend facade)" as mpFacade
+  database "Keychain" as keychain
+  database "Local encrypted storage" as localStore
+}
+
+node "Lekta backend\nExpress" as backend {
+  component "/api/auth" as apiSession
+  component "/api/mp" as apiMp
+  component "/api/checkout" as apiCheckout
+  component "/api/webhooks" as apiWebhook
+  component "MP token encryption" as tokenCrypto
+}
+
+database "Postgres\nlekta_backend" as db
+cloud "Mercado Pago" as mp
+cloud "HTTPS / nginx\nlekta.com.ar" as nginx
+
+operator --> ios
+ios --> nginx : HTTPS
+nginx --> backend : proxy /api/*
+session --> keychain : access/refresh app tokens
+auth --> session : Bearer token
+checkout --> session : Bearer token
+mpFacade --> session : Bearer token
+mpAuth --> auth : OAuth code + verifier
+apiSession --> db : app_sessions, businesses
+apiMp --> db : mercado_pago_accounts
+apiCheckout --> db : orders, order_items
+apiWebhook --> db : mp_webhook_events, orders
+tokenCrypto --> db : encrypted MP tokens
+apiMp --> mp : oauth/token, users/me, payments/search
+apiCheckout --> mp : checkout/preferences
+apiWebhook --> mp : GET payment real
+mp --> apiWebhook : webhook payment
+@enduml
+
+@startuml LektaCheckoutSequence
+title Lekta - Checkout QR aprobado por webhook
+actor Operador
+participant "CheckoutView" as View
+participant "BackendSessionService" as Session
+participant "BackendCheckoutService" as CheckoutSvc
+participant "Lekta backend" as Backend
+database "Postgres" as DB
+participant "Mercado Pago" as MP
+
+Operador -> View : Cobrar con QR
+View -> CheckoutSvc : createOrder(items, operator, cash_session)
+CheckoutSvc -> Session : authorize(request)
+Session -> Backend : POST /api/auth/session or /refresh
+Backend -> DB : create/rotate app session
+Backend --> Session : access_token + refresh_token
+CheckoutSvc -> Backend : POST /api/checkout/orders\nAuthorization: Bearer
+Backend -> DB : insert order pending + items
+Backend --> CheckoutSvc : order_id, external_reference, pending
+View -> CheckoutSvc : createPreference(order_id)
+CheckoutSvc -> Backend : POST /api/checkout/orders/:id/preference
+Backend -> DB : load order + MP account
+Backend -> MP : POST /checkout/preferences\nexternal_reference + notification_url
+MP --> Backend : preference_id + init_point
+Backend -> DB : save mp_preference_id
+Backend --> View : init_point / sandbox_init_point
+View -> Operador : muestra QR
+MP -> Backend : POST /api/webhooks/mercadopago
+Backend -> MP : GET /v1/payments/:id
+MP --> Backend : payment real
+Backend -> DB : update order approved/rejected
+loop cada 2-3s
+  View -> Backend : GET /api/checkout/orders/:id/status
+  Backend --> View : pending/approved/rejected
+end
+View -> View : si approved, descuenta stock y cierra venta
+@enduml
+
+@startuml LektaOAuthSequence
+title Lekta - OAuth Mercado Pago server-side
+actor Operador
+participant "MPConnectView / MPAuthService" as App
+participant "BackendSessionService" as Session
+participant "Lekta backend" as Backend
+database "Postgres" as DB
+participant "Mercado Pago OAuth" as MP
+
+Operador -> App : Conectar Mercado Pago
+App -> MP : abre authorization URL\nclient_id + redirect_uri + PKCE + state
+MP --> App : callback con code + state
+App -> Session : authorize backend request
+Session -> Backend : POST /api/auth/session or /refresh
+Backend --> Session : access_token
+App -> Backend : POST /api/mp/oauth/exchange\ncode + code_verifier + redirect_uri\nAuthorization: Bearer
+Backend -> MP : POST /oauth/token\nclient_secret solo backend
+MP --> Backend : access_token + refresh_token + user_id
+Backend -> Backend : encrypt tokens AES-256-GCM
+Backend -> DB : upsert mercado_pago_accounts
+Backend --> App : mp_account_id, mp_user_id, expires_at, scopes
+App -> DB : no client DB; guarda solo mp metadata en Keychain
+@enduml
+
+@startuml LektaDataModel
+title Lekta backend - Modelo de datos principal
+class businesses {
+  id: text <<PK>>
+  name: text
+  created_at: timestamptz
+  updated_at: timestamptz
+}
+
+class app_sessions {
+  id: uuid <<PK>>
+  business_id: text <<FK>>
+  device_id: text
+  operator_id: text
+  refresh_token_hash: text
+  revoked_at: timestamptz
+  expires_at: timestamptz
+}
+
+class mercado_pago_accounts {
+  id: uuid <<PK>>
+  business_id: text <<FK>>
+  mp_user_id: text
+  encrypted_access_token: text
+  encrypted_refresh_token: text
+  expires_at: timestamptz
+  scopes: text[]
+}
+
+class orders {
+  id: text <<PK>>
+  business_id: text <<FK>>
+  external_reference: text
+  status: pending|approved|rejected|cancelled|expired
+  total_amount: numeric
+  currency: text
+  operator_id: text
+  cash_session_id: text
+  mp_account_id: uuid <<FK>>
+  mp_preference_id: text
+  mp_payment_id: text
+  status_detail: text
+  approved_at: timestamptz
+}
+
+class order_items {
+  id: uuid <<PK>>
+  order_id: text <<FK>>
+  barcode: text
+  title: text
+  unit_price: numeric
+  quantity: integer
+}
+
+class mp_webhook_events {
+  id: uuid <<PK>>
+  topic: text
+  resource_id: text
+  action: text
+  idempotency_key: text
+  raw_payload: jsonb
+  processed: boolean
+  processed_at: timestamptz
+  status: text
+}
+
+businesses "1" -- "many" app_sessions
+businesses "1" -- "many" mercado_pago_accounts
+businesses "1" -- "many" orders
+mercado_pago_accounts "1" -- "many" orders
+orders "1" -- "many" order_items
+orders "1" -- "many" mp_webhook_events : by external_reference/payment
+@enduml

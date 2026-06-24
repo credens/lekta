@@ -72,7 +72,7 @@ enum KeychainService {
     // MARK: - Convenience
 
     static var hasMPToken: Bool { return get(.mpAccessToken) != nil }
-    static var hasMPConnection: Bool { return get(.mpAccountId) != nil || hasMPToken }
+    static var hasMPConnection: Bool { return get(.mpAccountId) != nil }
     static var mpAccountId: String? { return get(.mpAccountId) }
     static var mpAccessToken: String? { return get(.mpAccessToken) }
 
