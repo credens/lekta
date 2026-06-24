@@ -1,0 +1,402 @@
+LEKTA-BACKEND: CAMBIOS NECESARIOS
+
+1. OBJETIVO
+
+El backend debe convertirse en la unica capa que:
+- habla con Mercado Pago
+- guarda y protege credenciales sensibles
+- confirma el estado real de los pagos
+- autentica y autoriza a la app iOS
+- expone endpoints HTTPS endurecidos para la app
+
+La app iOS ya fue migrada para:
+- no hacer exchange OAuth directo con Mercado Pago
+- no crear preferences directo con Mercado Pago
+- no confirmar pagos usando preferences
+- usar lekta-backend para OAuth, ordenes, preferences y status
+- exigir HTTPS y certificate pinning del backend
+
+
+2. CAMBIOS CRITICOS DE SEGURIDAD
+
+2.1 Transporte
+- Exponer solo HTTPS
+- TLS 1.2 minimo, ideal TLS 1.3
+- Certificado valido de CA publica
+- No permitir HTTP
+- Configurar HSTS si el dominio tambien sirve web
+
+2.2 Secretos
+- Guardar MP_CLIENT_SECRET, Access Tokens, Refresh Tokens y claves JWT solo en backend
+- No guardar secretos en repo
+- Usar secret manager o variables de entorno protegidas
+- Cifrar Access Token y Refresh Token de MP en reposo
+
+2.3 Logs
+- No loguear Authorization headers
+- No loguear access_token, refresh_token, client_secret
+- No loguear payloads completos sensibles
+- Mantener logs de auditoria para ordenes y webhooks sin filtrar secretos
+
+2.4 API hardening
+- Rate limiting por IP y por cuenta
+- Validacion estricta de payloads
+- IDs no predecibles para ordenes
+- Idempotencia en webhooks y operaciones sensibles
+- Timeouts razonables
+
+
+3. AUTH ENTRE APP Y BACKEND
+
+Hoy la app habla con backend pero todavia hace falta cerrar la autenticacion del lado servidor.
+
+Implementar:
+- access token corto para la app
+- refresh token rotado
+- expiracion corta
+- revocacion
+- validacion de sesion por negocio/dispositivo/operador si aplica
+
+Minimo:
+- proteger endpoints de checkout y conciliacion
+- no dejar endpoints operativos “publicos” solo por estar detras de la app
+
+Importante:
+- aunque la API sea accesible desde Internet, no debe aceptar operaciones sin autenticacion y autorizacion validas
+
+
+4. OAUTH DE MERCADO PAGO
+
+Endpoint requerido:
+- POST /api/mp/oauth/exchange
+
+Request esperado desde iOS:
+{
+  "code": "...",
+  "code_verifier": "...",
+  "redirect_uri": "https://credens.github.io/mp-redirect/"
+}
+
+Tareas del backend:
+- recibir code y code_verifier desde la app
+- llamar al token endpoint de Mercado Pago desde servidor
+- guardar access_token
+- guardar refresh_token
+- guardar expires_at
+- guardar mp_user_id
+- guardar scopes si vienen
+- devolver solo metadata no sensible al cliente
+
+Response minima sugerida:
+{
+  "mp_account_id": "uuid",
+  "mp_user_id": "123456",
+  "expires_at": "2026-06-23T12:00:00Z",
+  "scopes": []
+}
+
+No devolver:
+- access_token
+- refresh_token
+- client_secret
+
+
+5. MODELO DE DATOS MINIMO
+
+5.1 tabla mercado_pago_accounts
+- id
+- business_id
+- mp_user_id
+- encrypted_access_token
+- encrypted_refresh_token
+- expires_at
+- scopes
+- created_at
+- updated_at
+
+5.2 tabla orders
+- id
+- business_id
+- external_reference
+- status
+- status_detail
+- total_amount
+- currency
+- operator_id
+- cash_session_id
+- device_id
+- mp_account_id
+- mp_preference_id
+- mp_payment_id
+- approved_at
+- created_at
+- updated_at
+
+5.3 tabla order_items
+- id
+- order_id
+- barcode
+- title
+- unit_price
+- quantity
+
+5.4 tabla mp_webhook_events
+- id
+- topic o type
+- action
+- resource_id
+- raw_payload
+- processed
+- processed_at
+- created_at
+
+
+6. CHECKOUT QR
+
+6.1 Crear orden local
+Endpoint:
+- POST /api/checkout/orders
+
+Request esperado:
+{
+  "items": [
+    {
+      "barcode": "7791234567890",
+      "name": "Producto",
+      "unit_price": 2500,
+      "quantity": 2
+    }
+  ],
+  "operator_id": "op_123",
+  "cash_session_id": "cash_456",
+  "device_id": "optional"
+}
+
+Tareas:
+- validar auth del cliente
+- validar pertenencia de business
+- calcular total server-side
+- crear order con status = pending
+- generar external_reference unico
+- guardar items
+
+Response:
+{
+  "order_id": "ord_...",
+  "external_reference": "lekta-ord_...",
+  "status": "pending",
+  "total_amount": 5000
+}
+
+6.2 Crear preference desde backend
+Endpoint:
+- POST /api/checkout/orders/:order_id/preference
+
+Request esperado:
+{
+  "success_url": null
+}
+
+Tareas:
+- validar auth y ownership de order
+- buscar cuenta MP asociada
+- crear preference en Mercado Pago desde backend
+- enviar external_reference
+- enviar notification_url
+- opcional metadata con business_id, order_id, operator_id
+- guardar mp_preference_id
+
+Response:
+{
+  "order_id": "ord_...",
+  "preference_id": "123456789-xxxx",
+  "init_point": "https://www.mercadopago.com/...",
+  "sandbox_init_point": "https://sandbox.mercadopago.com/..."
+}
+
+Importante:
+- la app genera el QR usando esa URL
+- la app no debe llamar a MP directo
+
+6.3 Polling de estado
+Endpoint:
+- GET /api/checkout/orders/:order_id/status
+
+Response:
+{
+  "order_id": "ord_...",
+  "status": "pending | approved | rejected | cancelled | expired",
+  "status_detail": "accredited",
+  "mp_payment_id": "99887766"
+}
+
+Regla:
+- status = approved es la unica condicion que habilita cierre exitoso en la app
+
+La app hoy ya hace esto:
+- poll cada 2-3 segundos
+- confirma venta local solo si backend responde approved
+
+
+7. WEBHOOK DE MERCADO PAGO
+
+Endpoint:
+- POST /api/webhooks/mercadopago
+
+Tareas obligatorias:
+- guardar evento crudo
+- aplicar idempotencia
+- validar autenticidad si el producto de MP usado lo permite
+- no confiar ciegamente en el payload entrante
+- consultar el pago real a Mercado Pago
+- extraer external_reference del pago real
+- buscar la order local correcta
+- actualizar status de la order
+
+Estados a mapear como minimo:
+- approved
+- rejected
+- cancelled
+- expired
+- pending
+
+Guardar tambien:
+- mp_payment_id
+- status_detail
+- approved_at si corresponde
+
+
+8. CONCILIACION Y REPORTES
+
+La app todavia usa MercadoPagoService para:
+- verificar POS
+- obtener total de pagos desde una fecha
+
+Idealmente mover tambien eso a backend.
+
+Cambios recomendados:
+- crear endpoint backend para verificar integracion activa de MP
+- crear endpoint backend para total de pagos aprobados desde fecha
+- dejar que el backend use las credenciales MP protegidas
+
+Sugerencia de endpoints:
+- GET /api/mp/account/status
+- GET /api/mp/payments/total?begin_date=...
+
+
+9. CERTIFICATE PINNING
+
+La app iOS ahora tiene pinning del backend.
+
+El backend debe:
+- tener certificado estable y valido
+- avisar antes de rotaciones de certificado
+- idealmente permitir estrategia de doble pin durante rotacion
+
+Necesario para el equipo iOS:
+- entregar el SHA-256 Base64 del certificado o de la public key
+- reemplazar en la app:
+  Config.backendPinnedCertificateSHA256
+
+Mientras eso no se configure, las llamadas al backend van a fallar por seguridad.
+
+
+10. CONTRATOS QUE EL BACKEND NO DEBE ROMPER
+
+10.1 OAuth exchange response
+- mp_account_id
+- mp_user_id
+- expires_at
+- scopes
+
+10.2 Create order response
+- order_id
+- external_reference
+- status
+- total_amount
+
+10.3 Create preference response
+- order_id
+- preference_id
+- init_point
+- sandbox_init_point
+
+10.4 Order status response
+- order_id
+- status
+- status_detail
+- mp_payment_id
+
+
+11. VALIDACIONES IMPORTANTES
+
+11.1 En create order
+- quantity > 0
+- unit_price >= 0
+- items no vacio
+- total recalculado en backend
+
+11.2 En create preference
+- order existente
+- order pertenece al negocio autenticado
+- status de order compatible con generar preference
+- cuenta MP conectada y vigente
+
+11.3 En webhook
+- procesar una vez
+- consultar pago real
+- no aprobar por payload no verificado
+
+
+12. MANEJO DE TOKENS MP
+
+Implementar:
+- expiracion controlada
+- refresh del token si MP lo requiere y el flujo lo soporta
+- deteccion de token vencido/revocado
+- reconexion de cuenta MP si corresponde
+
+Nunca:
+- devolver access_token a iOS
+- depender de token MP en el cliente
+
+
+13. CHECKLIST FINAL
+
+- HTTPS only
+- TLS 1.2/1.3
+- HSTS
+- secrets en secret manager
+- tokens MP cifrados en DB
+- OAuth exchange solo server-side
+- create order implementado
+- create preference implementado
+- order status implementado
+- webhook implementado con idempotencia
+- consulta real a MP en webhook
+- auth de app implementada
+- rate limiting
+- logs sin secretos
+- certificado listo para pinning iOS
+- endpoints de conciliacion migrados a backend
+
+
+14. PRIORIDAD SUGERIDA
+
+Prioridad 1
+- POST /api/mp/oauth/exchange
+- POST /api/checkout/orders
+- POST /api/checkout/orders/:order_id/preference
+- GET /api/checkout/orders/:order_id/status
+- POST /api/webhooks/mercadopago
+
+Prioridad 2
+- auth completa de la app
+- cifrado de tokens MP en reposo
+- rate limiting
+- auditoria
+
+Prioridad 3
+- mover conciliacion y reportes MP restantes al backend
+- estrategia formal de rotacion de certificados para pinning
+
