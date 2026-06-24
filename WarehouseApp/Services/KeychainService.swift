@@ -11,6 +11,12 @@ enum KeychainService {
         case mpUserId       = "mp_user_id"
         case mpExpiresAt    = "mp_expires_at"
         case skipMPAuth     = "skip_mp_auth"
+        case backendAccessToken = "backend_access_token"
+        case backendAccessTokenExpiresAt = "backend_access_token_expires_at"
+        case backendRefreshToken = "backend_refresh_token"
+        case backendRefreshTokenExpiresAt = "backend_refresh_token_expires_at"
+        case backendBusinessId = "backend_business_id"
+        case backendDeviceId = "backend_device_id"
     }
 
     // MARK: - Write

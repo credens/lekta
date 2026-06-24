@@ -12,6 +12,14 @@ const config = {
   mpNotificationUrl:
     process.env.MP_NOTIFICATION_URL ||
     (publicBaseUrl ? `${publicBaseUrl}/api/webhooks/mercadopago` : undefined),
+  jwtSecret: process.env.JWT_SECRET,
+  appBootstrapToken: process.env.APP_BOOTSTRAP_TOKEN,
+  tokenEncryptionKey: process.env.TOKEN_ENCRYPTION_KEY,
+  appAccessTokenSeconds: Number(process.env.APP_ACCESS_TOKEN_SECONDS || 900),
+  appRefreshTokenDays: Number(process.env.APP_REFRESH_TOKEN_DAYS || 30),
+  rateLimitWindowMs: Number(process.env.RATE_LIMIT_WINDOW_MS || 60000),
+  rateLimitMax: Number(process.env.RATE_LIMIT_MAX || 120),
+  enforceHttps: process.env.ENFORCE_HTTPS === 'true',
 };
 
 export function requireConfig(keys) {

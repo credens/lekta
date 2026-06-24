@@ -1,18 +1,24 @@
 import { Router } from 'express';
-import pool from '../db.js';
-import { exchangeOAuthCode, oauthExpiresAt } from '../lib/mercadoPago.js';
+import { exchangeOAuthCode, getAccountStatus, getApprovedPaymentsTotal } from '../lib/mercadoPago.js';
+import { getLatestMercadoPagoAccount, refreshMercadoPagoAccountIfNeeded, saveMercadoPagoAccount } from '../lib/mpAccounts.js';
 import HttpError from '../lib/httpError.js';
 
 const router = Router();
+
+function validateIsoDate(value, field) {
+  if (!value || Number.isNaN(Date.parse(value))) throw new HttpError(400, `${field} is required and must be a valid date`);
+  return new Date(value).toISOString();
+}
 
 router.post('/oauth/exchange', async (req, res, next) => {
   try {
     const { code, code_verifier, redirect_uri } = req.body;
     if (!code?.trim()) throw new HttpError(400, 'code is required');
+    if (!code_verifier?.trim()) throw new HttpError(400, 'code_verifier is required');
 
     const token = await exchangeOAuthCode({
       code: code.trim(),
-      codeVerifier: code_verifier,
+      codeVerifier: code_verifier.trim(),
       redirectUri: redirect_uri,
     });
 
@@ -20,34 +26,56 @@ router.post('/oauth/exchange', async (req, res, next) => {
       throw new HttpError(502, 'Mercado Pago OAuth response is missing required fields', token);
     }
 
-    const scopes = token.scope ? String(token.scope).split(/\s+/).filter(Boolean) : [];
-    const expiresAt = oauthExpiresAt(token.expires_in);
-
-    const { rows } = await pool.query(
-      `INSERT INTO mercado_pago_accounts
-        (mp_user_id, access_token, refresh_token, expires_at, scopes)
-       VALUES ($1, $2, $3, $4, $5)
-       ON CONFLICT (mp_user_id) DO UPDATE SET
-        access_token = EXCLUDED.access_token,
-        refresh_token = EXCLUDED.refresh_token,
-        expires_at = EXCLUDED.expires_at,
-        scopes = EXCLUDED.scopes
-       RETURNING id, mp_user_id, expires_at, scopes, created_at, updated_at`,
-      [
-        String(token.user_id),
-        token.access_token,
-        token.refresh_token || null,
-        expiresAt,
-        scopes,
-      ]
-    );
+    const account = await saveMercadoPagoAccount({
+      businessId: req.auth.businessId,
+      token,
+    });
 
     res.json({
-      mp_account_id: rows[0].id,
-      mp_user_id: rows[0].mp_user_id,
-      expires_at: rows[0].expires_at,
-      scopes: rows[0].scopes,
+      mp_account_id: account.id,
+      mp_user_id: account.mp_user_id,
+      expires_at: account.expires_at,
+      scopes: account.scopes,
     });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/account/status', async (req, res, next) => {
+  try {
+    let account = await getLatestMercadoPagoAccount({ businessId: req.auth.businessId });
+    if (!account) throw new HttpError(404, 'No Mercado Pago account connected');
+    account = await refreshMercadoPagoAccountIfNeeded(account);
+    const status = await getAccountStatus({ accessToken: account.accessToken });
+
+    res.json({
+      mp_account_id: account.id,
+      mp_user_id: account.mpUserId,
+      expires_at: account.expiresAt,
+      scopes: account.scopes,
+      account: status,
+    });
+  } catch (err) {
+    next(err);
+  }
+});
+
+router.get('/payments/total', async (req, res, next) => {
+  try {
+    const beginDate = validateIsoDate(req.query.begin_date, 'begin_date');
+    const endDate = req.query.end_date ? validateIsoDate(req.query.end_date, 'end_date') : null;
+    let account = await getLatestMercadoPagoAccount({ businessId: req.auth.businessId });
+    if (!account) throw new HttpError(404, 'No Mercado Pago account connected');
+    account = await refreshMercadoPagoAccountIfNeeded(account);
+
+    const total = await getApprovedPaymentsTotal({
+      accessToken: account.accessToken,
+      beginDate,
+      endDate,
+    });
+
+    res.json(total);
   } catch (err) {
     next(err);
   }

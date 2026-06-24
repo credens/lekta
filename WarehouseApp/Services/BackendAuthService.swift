@@ -9,6 +9,7 @@ enum BackendAuthService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        try await BackendSessionService.authorize(&request)
         request.httpBody = try JSONEncoder().encode(
             OAuthExchangeRequest(
                 code: code,
@@ -17,7 +18,10 @@ enum BackendAuthService {
             )
         )
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureNetworkTransport.shared.data(
+            for: request,
+            pinning: .backend
+        )
         guard let http = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }

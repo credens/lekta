@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import pool from '../db.js';
 import { getPayment } from '../lib/mercadoPago.js';
+import { listMercadoPagoAccounts, refreshMercadoPagoAccountIfNeeded } from '../lib/mpAccounts.js';
 import { mapPaymentStatus } from '../lib/orders.js';
 
 const router = Router();
@@ -29,16 +30,13 @@ function makeIdempotencyKey({ topic, action, resourceId }) {
 }
 
 async function fetchPaymentWithAnyAccount(paymentId) {
-  const { rows: accounts } = await pool.query(
-    `SELECT id, access_token
-     FROM mercado_pago_accounts
-     ORDER BY updated_at DESC`
-  );
+  const accounts = await listMercadoPagoAccounts();
 
   let lastError;
-  for (const account of accounts) {
+  for (const candidate of accounts) {
     try {
-      const payment = await getPayment({ accessToken: account.access_token, paymentId });
+      const account = await refreshMercadoPagoAccountIfNeeded(candidate);
+      const payment = await getPayment({ accessToken: account.accessToken, paymentId });
       return { payment, account };
     } catch (err) {
       lastError = err;
@@ -56,6 +54,8 @@ router.post('/mercadopago', async (req, res, next) => {
   const idempotencyKey = makeIdempotencyKey({ topic, action, resourceId });
 
   const client = await pool.connect();
+  let transactionStarted = false;
+  let eventId = null;
   try {
     const { rows: eventRows } = await client.query(
       `INSERT INTO mp_webhook_events (topic, resource_id, action, idempotency_key, raw_payload)
@@ -69,13 +69,12 @@ router.post('/mercadopago', async (req, res, next) => {
       return res.sendStatus(200);
     }
 
-    const eventId = eventRows[0].id;
-
+    eventId = eventRows[0].id;
     const isPayment = topic === 'payment' || topic === 'payments' || action?.startsWith('payment.');
     if (!resourceId || !isPayment) {
       await client.query(
         `UPDATE mp_webhook_events
-         SET processed_at = now(), status = 'ignored'
+         SET processed_at = now(), processed = true, status = 'ignored'
          WHERE id = $1`,
         [eventId]
       );
@@ -87,6 +86,7 @@ router.post('/mercadopago', async (req, res, next) => {
     const orderStatus = mapPaymentStatus(payment.status);
 
     await client.query('BEGIN');
+    transactionStarted = true;
 
     const { rows: orderRows } = await client.query(
       `SELECT id, status
@@ -99,7 +99,7 @@ router.post('/mercadopago', async (req, res, next) => {
     if (!orderRows[0]) {
       await client.query(
         `UPDATE mp_webhook_events
-         SET processed_at = now(), status = 'order_not_found'
+         SET processed_at = now(), processed = true, status = 'order_not_found'
          WHERE id = $1`,
         [eventId]
       );
@@ -137,7 +137,7 @@ router.post('/mercadopago', async (req, res, next) => {
 
     await client.query(
       `UPDATE mp_webhook_events
-       SET processed_at = now(), status = 'processed'
+       SET processed_at = now(), processed = true, status = 'processed'
        WHERE id = $1`,
       [eventId]
     );
@@ -145,13 +145,13 @@ router.post('/mercadopago', async (req, res, next) => {
     await client.query('COMMIT');
     res.sendStatus(200);
   } catch (err) {
-    await client.query('ROLLBACK');
-    if (resourceId) {
+    if (transactionStarted) await client.query('ROLLBACK');
+    if (eventId) {
       await pool.query(
         `UPDATE mp_webhook_events
-         SET processed_at = now(), status = 'error'
-         WHERE resource_id = $1 AND processed_at IS NULL`,
-        [resourceId]
+         SET processed_at = now(), processed = false, status = 'error'
+         WHERE id = $1`,
+        [eventId]
       );
     }
     next(err);

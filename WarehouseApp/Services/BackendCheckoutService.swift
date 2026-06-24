@@ -61,8 +61,12 @@ enum BackendCheckoutService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        try await BackendSessionService.authorize(&request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureNetworkTransport.shared.data(
+            for: request,
+            pinning: .backend
+        )
         guard let http = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }
@@ -82,8 +86,12 @@ enum BackendCheckoutService {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         request.httpBody = try JSONEncoder().encode(requestBody)
+        try await BackendSessionService.authorize(&request)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureNetworkTransport.shared.data(
+            for: request,
+            pinning: .backend
+        )
         guard let http = response as? HTTPURLResponse else {
             throw URLError(.badServerResponse)
         }

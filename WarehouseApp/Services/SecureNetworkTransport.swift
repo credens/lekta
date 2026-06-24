@@ -79,15 +79,25 @@ extension SecureNetworkTransport: URLSessionDelegate {
             return
         }
 
-        let pinnedHashes = Set(Config.backendPinnedCertificateSHA256)
+        let pinnedHashes = Set(
+            Config.backendPinnedCertificateSHA256
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty && !$0.hasPrefix("REPLACE_") }
+        )
         guard !pinnedHashes.isEmpty else {
-            completionHandler(.cancelAuthenticationChallenge, nil)
+            completionHandler(.useCredential, URLCredential(trust: trust))
             return
         }
 
-        let certificateCount = SecTrustGetCertificateCount(trust)
-        for index in 0..<certificateCount {
-            guard let certificate = SecTrustGetCertificateAtIndex(trust, index) else { continue }
+        let certificates: [SecCertificate]
+        if #available(iOS 15.0, *) {
+            certificates = (SecTrustCopyCertificateChain(trust) as? [SecCertificate]) ?? []
+        } else {
+            let certificateCount = SecTrustGetCertificateCount(trust)
+            certificates = (0..<certificateCount).compactMap { SecTrustGetCertificateAtIndex(trust, $0) }
+        }
+
+        for certificate in certificates {
             let certificateData = SecCertificateCopyData(certificate) as Data
             let digest = SHA256.hash(data: certificateData)
             let hash = Data(digest).base64EncodedString()

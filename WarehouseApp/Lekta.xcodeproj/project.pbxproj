@@ -47,6 +47,8 @@
 		6FD0B0FB2FDB892B005F096A /* MasterPINSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FD0B0FA2FDB892B005F096A /* MasterPINSheet.swift */; };
 		6FDFA0EC2FEB69CD00B999E1 /* BackendAuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDFA0EB2FEB69CD00B999E1 /* BackendAuthService.swift */; };
 		6FDFA0EE2FEB69E700B999E1 /* BackendCheckoutService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDFA0ED2FEB69E700B999E1 /* BackendCheckoutService.swift */; };
+		6FDFA0F02FEB6CF100B999E1 /* SecureNetworkTransport.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDFA0EF2FEB6CF100B999E1 /* SecureNetworkTransport.swift */; };
+		6FDFA0F22FEB7D0100B999E1 /* BackendSessionService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FDFA0F12FEB7D0100B999E1 /* BackendSessionService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -97,6 +99,8 @@
 		6FD0B0FA2FDB892B005F096A /* MasterPINSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MasterPINSheet.swift; sourceTree = "<group>"; };
 		6FDFA0EB2FEB69CD00B999E1 /* BackendAuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendAuthService.swift; sourceTree = "<group>"; };
 		6FDFA0ED2FEB69E700B999E1 /* BackendCheckoutService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendCheckoutService.swift; sourceTree = "<group>"; };
+		6FDFA0EF2FEB6CF100B999E1 /* SecureNetworkTransport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SecureNetworkTransport.swift; sourceTree = "<group>"; };
+		6FDFA0F12FEB7D0100B999E1 /* BackendSessionService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackendSessionService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -209,6 +213,8 @@
 				6FD0B0F82FDB892B005F096A /* MasterPINService.swift */,
 				6FDFA0EB2FEB69CD00B999E1 /* BackendAuthService.swift */,
 				6FDFA0ED2FEB69E700B999E1 /* BackendCheckoutService.swift */,
+				6FDFA0F12FEB7D0100B999E1 /* BackendSessionService.swift */,
+				6FDFA0EF2FEB6CF100B999E1 /* SecureNetworkTransport.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -393,6 +399,7 @@
 				6F2FDC7F2FD4E7CE00E26F13 /* KeychainService.swift in Sources */,
 				6F2FDC812FD4E7CE00E26F13 /* ProductViewModel.swift in Sources */,
 				6F1055CB2FDA5239009A5F48 /* ReportsView.swift in Sources */,
+				6FDFA0F02FEB6CF100B999E1 /* SecureNetworkTransport.swift in Sources */,
 				6F2FDC822FD4E7CE00E26F13 /* CobrarView.swift in Sources */,
 				6F1055CF2FDA52F2009A5F48 /* SoundService.swift in Sources */,
 				6F2FDC832FD4E7CE00E26F13 /* ProductListView.swift in Sources */,
@@ -401,6 +408,7 @@
 				6F2FDC852FD4E7CE00E26F13 /* CameraPreview.swift in Sources */,
 				6F2FDC862FD4E7CE00E26F13 /* BarcodeService.swift in Sources */,
 				6FDFA0EC2FEB69CD00B999E1 /* BackendAuthService.swift in Sources */,
+				6FDFA0F22FEB7D0100B999E1 /* BackendSessionService.swift in Sources */,
 				6F2FDC872FD4E7CE00E26F13 /* InventarioView.swift in Sources */,
 				6F1055D12FDA52F4009A5F48 /* SubscriptionTier.swift in Sources */,
 				6F1055DC2FDA57C5009A5F48 /* OperadorLoginSheet.swift in Sources */,

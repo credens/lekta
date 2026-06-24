@@ -51,7 +51,10 @@ enum MercadoPagoService {
 
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureNetworkTransport.shared.data(
+            for: request,
+            pinning: .none
+        )
         guard let http = response as? HTTPURLResponse, http.statusCode == 201 else {
             throw URLError(.badServerResponse)
         }
@@ -69,7 +72,10 @@ enum MercadoPagoService {
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureNetworkTransport.shared.data(
+            for: request,
+            pinning: .none
+        )
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             throw URLError(.badServerResponse)
         }
@@ -86,7 +92,10 @@ enum MercadoPagoService {
         var request = URLRequest(url: url)
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
 
-        let (_, response) = try await URLSession.shared.data(for: request)
+        let (_, response) = try await SecureNetworkTransport.shared.data(
+            for: request,
+            pinning: .none
+        )
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             throw URLError(.badServerResponse)
         }
@@ -108,7 +117,10 @@ enum MercadoPagoService {
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await SecureNetworkTransport.shared.data(
+            for: request,
+            pinning: .none
+        )
         guard let http = response as? HTTPURLResponse, (200...299).contains(http.statusCode) else {
             throw URLError(.badServerResponse)
         }

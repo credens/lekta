@@ -20,6 +20,13 @@
 		</dict>
 		<dict/>
 	</array>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsLocalNetworking</key>
+		<false/>
+	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>Necesaria para escanear códigos de barra</string>
 </dict>
