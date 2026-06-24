@@ -2,7 +2,7 @@ import Foundation
 
 enum Config {
     static let mpClientId = "6565886142165164"
-    static let backendBaseURL = URL(string: "https://api.tudominio.com")!
+    static let backendBaseURL = URL(string: "https://lekta.com.ar")!
     static let backendBusinessID = "default"
     static let backendBootstrapToken = "REPLACE_WITH_BACKEND_BOOTSTRAP_TOKEN"
     static let backendPinnedCertificateSHA256 = [
