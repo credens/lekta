@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">Lekta</string>
-    <string name="slogan">Tu negocio en el bolsillo</string>
-    <string name="camera_permission_rationale">Lekta necesita acceso a la cámara para escanear códigos de barras</string>
-</resources>
