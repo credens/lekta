@@ -2,11 +2,21 @@
 .DS_Store
 *.swp
 
+# Env / secrets
+.env
+.env.*
+!.env.example
+node_modules/
+npm-debug.log*
+
 # Xcode
 *.xcodeproj/xcuserdata/
 *.xcworkspace/xcuserdata/
+xcuserdata/
+*.xcuserstate
 DerivedData/
 build/
+.swiftpm/
 
 # Android
 LektaAndroid/.gradle/
@@ -20,5 +30,5 @@ LektaAndroid/local.properties
 .idea/
 *.iml
 
-# Claude
+# Claude / local assistant state
 .claude/

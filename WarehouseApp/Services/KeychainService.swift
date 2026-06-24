@@ -5,6 +5,7 @@ enum KeychainService {
     private static let service = "com.warehouseapp"
 
     enum Key: String, CaseIterable {
+        case mpAccountId    = "mp_account_id"
         case mpAccessToken  = "mp_access_token"
         case mpRefreshToken = "mp_refresh_token"
         case mpUserId       = "mp_user_id"
@@ -65,6 +66,8 @@ enum KeychainService {
     // MARK: - Convenience
 
     static var hasMPToken: Bool { return get(.mpAccessToken) != nil }
+    static var hasMPConnection: Bool { return get(.mpAccountId) != nil || hasMPToken }
+    static var mpAccountId: String? { return get(.mpAccountId) }
     static var mpAccessToken: String? { return get(.mpAccessToken) }
 
     static var skipMPAuth: Bool {

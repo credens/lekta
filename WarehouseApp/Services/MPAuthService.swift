@@ -15,7 +15,6 @@ class MPAuthService: NSObject, ObservableObject {
     private var oauthState: String?
 
     private let authURL        = "https://auth.mercadopago.com.ar/authorization"
-    private let tokenURL       = "https://api.mercadopago.com/oauth/token"
     private let callbackScheme = "warehouseapp"
 
     override init() {
@@ -26,7 +25,7 @@ class MPAuthService: NSObject, ObservableObject {
             KeychainService.skipMPAuth = true
             UserDefaults.standard.removeObject(forKey: legacyKey)
         }
-        isAuthenticated = KeychainService.hasMPToken || KeychainService.skipMPAuth
+        isAuthenticated = KeychainService.hasMPConnection || KeychainService.skipMPAuth
     }
 
     // MARK: - Skip authentication (bypass mode for testing)
@@ -108,7 +107,7 @@ class MPAuthService: NSObject, ObservableObject {
         session.start()
     }
 
-    // MARK: - Exchange code for token
+    // MARK: - Exchange code via backend
 
     private func exchangeCode(_ code: String) async {
         defer { isLoading = false }
@@ -119,42 +118,13 @@ class MPAuthService: NSObject, ObservableObject {
         }
         codeVerifier = nil
 
-        guard let url = URL(string: tokenURL) else {
-            errorMessage = "Error de configuración."
-            return
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "POST"
-        request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
-        // Cache-Control to prevent credentials being stored in URL cache
-        request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
-
-        let params: [String: String] = [
-            "client_id":     Config.mpClientId,
-            "client_secret": Config.mpClientSecret,
-            "code":          code,
-            "redirect_uri":  Config.mpRedirectURI,
-            "grant_type":    "authorization_code",
-            "code_verifier": verifier
-        ]
-        request.httpBody = params
-            .map { "\($0.key)=\($0.value.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? $0.value)" }
-            .joined(separator: "&")
-            .data(using: .utf8)
-
         do {
-            let (data, response) = try await URLSession.shared.data(for: request)
-            guard let http = response as? HTTPURLResponse else {
-                errorMessage = "Respuesta inválida del servidor."
-                return
-            }
-            guard (200...299).contains(http.statusCode) else {
-                errorMessage = "Error al obtener credenciales (\(http.statusCode))."
-                return
-            }
-            let decoded = try JSONDecoder().decode(MPTokenResponse.self, from: data)
+            let decoded = try await BackendAuthService.exchangeOAuthCode(
+                code: code,
+                codeVerifier: verifier
+            )
             saveToken(decoded)
+            KeychainService.skipMPAuth = false
             isAuthenticated = true
         } catch {
             errorMessage = "No se pudo completar la autenticación."
@@ -182,12 +152,10 @@ class MPAuthService: NSObject, ObservableObject {
 
     // MARK: - Save tokens to Keychain
 
-    private func saveToken(_ response: MPTokenResponse) {
-        KeychainService.set(response.accessToken,  for: .mpAccessToken)
-        KeychainService.set(response.refreshToken, for: .mpRefreshToken)
-        KeychainService.set(String(response.userId), for: .mpUserId)
-        let expiresAt = Date().addingTimeInterval(TimeInterval(response.expiresIn))
-        KeychainService.set(String(expiresAt.timeIntervalSince1970), for: .mpExpiresAt)
+    private func saveToken(_ response: OAuthExchangeResponse) {
+        KeychainService.set(response.mpAccountID, for: .mpAccountId)
+        KeychainService.set(response.mpUserID, for: .mpUserId)
+        KeychainService.set(response.expiresAt, for: .mpExpiresAt)
     }
 
     // MARK: - Disconnect
@@ -209,21 +177,5 @@ extension MPAuthService: ASWebAuthenticationPresentationContextProviding {
             if let scene = scenes.first { return UIWindow(windowScene: scene) }
             preconditionFailure("No UIWindowScene available")
         }
-    }
-}
-
-// MARK: - Token response model
-
-private struct MPTokenResponse: Codable {
-    let accessToken:  String
-    let refreshToken: String
-    let expiresIn:    Int
-    let userId:       Int
-
-    enum CodingKeys: String, CodingKey {
-        case accessToken  = "access_token"
-        case refreshToken = "refresh_token"
-        case expiresIn    = "expires_in"
-        case userId       = "user_id"
     }
 }

@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lekta — Tu caja registradora en el celular</title>
-<meta name="description" content="Reemplazá el scanner de la línea de caja por tu celular. Escaneá códigos de barras, cobrá con MercadoPago y gestioná tu inventario desde una sola app.">
+<title>Lekta — Pagás cuando la usás</title>
+<meta name="description" content="Caja registradora en el celular. Uso gratuito hasta 250 productos, sin abonos mensuales ni fees cautivos. Solo pagás comisión por cobro y reportes mensuales si los necesitás.">
 <link rel="icon" type="image/png" href="icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -316,7 +316,7 @@ nav.scrolled { box-shadow: 0 4px 30px rgba(92, 58, 30, 0.08); }
 /* ── Pricing ── */
 .pricing { background: white; }
 .pricing-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr);
+  display: grid; grid-template-columns: repeat(3, 1fr);
   gap: 20px; align-items: start;
 }
 .price-card {
@@ -560,12 +560,12 @@ footer {
     </a>
     <ul class="nav-links" id="navLinks">
       <li><a href="#features">Funciones</a></li>
-      <li><a href="#como-funciona">Como funciona</a></li>
-      <li><a href="#planes">Planes</a></li>
+      <li><a href="#como-funciona">Cómo funciona</a></li>
+      <li><a href="#planes">Costos</a></li>
       <li><a href="#seguridad">Seguridad</a></li>
       <li><a href="#contacto" class="nav-cta">Empezar gratis</a></li>
     </ul>
-    <button class="nav-mobile-toggle" id="menuToggle" aria-label="Menu">
+    <button class="nav-mobile-toggle" id="menuToggle" type="button" aria-label="Menú" aria-controls="navLinks" aria-expanded="false">
       <span></span><span></span><span></span>
     </button>
   </div>
@@ -576,31 +576,27 @@ footer {
   <div class="container">
     <div class="hero-grid">
       <div class="hero-content">
-        <div class="hero-badge">Disponible para iOS</div>
-        <h1>Tu caja registradora<br><span class="gradient-text">en el celular</span></h1>
-        <p>Reemplazá el scanner de la línea de caja por tu celular. Escaneá códigos de barras, cobrá con QR interoperable y gestioná tu inventario. Todo en una sola app.</p>
+        <div class="hero-badge">Pagás cuando la usás</div>
+        <h1>Tu caja registradora<br><span class="gradient-text">sin abono mensual</span></h1>
+        <p>Reemplazá el escáner de la línea de caja por tu celular. Usá Lekta gratis hasta 250 productos, cobrá con QR interoperable y pagá solo una comisión cuando cobrás.</p>
         <div class="hero-actions">
           <a href="#contacto" class="btn-primary">
             <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
             Contactanos
           </a>
           <a href="#planes" class="btn-secondary">
-            Ver planes
+            Ver costos
             <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </a>
         </div>
         <div class="hero-stats">
           <div class="hero-stat">
-            <strong class="gradient-text">EAN-13</strong>
-            <span>Escaner de barras</span>
+            <strong class="gradient-text">$0</strong>
+            <span>Abono mensual</span>
           </div>
           <div class="hero-stat">
-            <strong class="gradient-text">QR</strong>
-            <span>Todas las billeteras</span>
-          </div>
-          <div class="hero-stat">
-            <strong class="gradient-text">AES-256</strong>
-            <span>Cifrado de datos</span>
+            <strong class="gradient-text">250</strong>
+            <span>Productos gratis</span>
           </div>
         </div>
       </div>
@@ -683,14 +679,14 @@ footer {
     <div class="section-header">
       <div class="label">Funciones</div>
       <h2>Todo lo que necesitás<br>para <span class="gradient-text">tu negocio</span></h2>
-      <p>Una app que reemplaza el scanner, la registradora y la planilla de Excel. Simple, rápida y segura.</p>
+      <p>Una app que reemplaza el escáner, la registradora y la planilla de Excel. Simple, rápida y sin costos fijos.</p>
     </div>
     <div class="features-grid">
       <div class="feature-card">
         <div class="feature-icon">
           <svg width="26" height="26" fill="none" stroke="var(--orange)" stroke-width="2" viewBox="0 0 24 24"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
         </div>
-        <h3>Escaner con la cámara</h3>
+        <h3>Escáner con la cámara</h3>
         <p>Escaneá códigos de barras EAN-13 con la cámara del celular. Rápido, preciso y sin hardware extra.</p>
       </div>
       <div class="feature-card">
@@ -698,7 +694,7 @@ footer {
           <svg width="26" height="26" fill="none" stroke="var(--orange)" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         </div>
         <h3>Cobros por QR</h3>
-        <p>QR interoperable (Transferencias 3.0): el cliente paga con cualquier billetera — MercadoPago, Modo, Ualá, su banco. Un solo QR.</p>
+        <p>QR interoperable (Transferencias 3.0): el cliente paga con cualquier billetera — Mercado Pago, Modo, Ualá, su banco. Un solo QR.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">
@@ -719,14 +715,14 @@ footer {
           <svg width="26" height="26" fill="none" stroke="var(--orange)" stroke-width="2" viewBox="0 0 24 24"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
         </div>
         <h3>Reportes</h3>
-        <p>Mirá las ventas del día, productos más vendidos y el resumen de caja. Datos claros para decidir mejor.</p>
+        <p>Mirá ventas del día en la app. Si necesitás reportes mensuales y análisis avanzados, los activás aparte.</p>
       </div>
       <div class="feature-card">
         <div class="feature-icon">
           <svg width="26" height="26" fill="none" stroke="var(--orange)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         </div>
         <h3>Seguridad total</h3>
-        <p>Tus datos se cifran con AES-256. Los tokens de MercadoPago se guardan en el Keychain del dispositivo.</p>
+        <p>Tus datos se cifran con AES-256. Los tokens de Mercado Pago se guardan en el Keychain del dispositivo.</p>
       </div>
     </div>
   </div>
@@ -736,7 +732,7 @@ footer {
 <section class="how-it-works section" id="como-funciona">
   <div class="container">
     <div class="section-header">
-      <div class="label">Como funciona</div>
+      <div class="label">Cómo funciona</div>
       <h2>Cobrá en <span class="gradient-text">3 simples pasos</span></h2>
       <p>Desde que abrís la app hasta que cobrás pasan menos de 30 segundos.</p>
     </div>
@@ -764,102 +760,76 @@ footer {
 <section class="pricing section" id="planes">
   <div class="container">
     <div class="section-header">
-      <div class="label">Planes</div>
-      <h2>Un plan para cada <span class="gradient-text">tamaño de negocio</span></h2>
-      <p>Empezá con lo que necesitás y escalá cuando crezcas. Todos los planes incluyen mantenimiento, actualizaciones y soporte 24/7.</p>
+      <div class="label">Costos</div>
+      <h2>Pagás <span class="gradient-text">cuando la usás</span></h2>
+      <p>Sin suscripción, sin mantenimiento mensual y sin fees cautivos. La caja, el inventario y los cobros están listos para operar desde el día uno.</p>
     </div>
     <div class="commission-banner">
-      <div class="commission-number">2,5%</div>
+      <div class="commission-number">$0</div>
       <div class="commission-text">
-        <strong>La comisión más baja del mercado</strong>
-        <span>Solo cobramos un 2,5% por transacción con QR. Sin costos ocultos, sin sorpresas. Otras plataformas cobran entre 4% y 8%.</span>
+        <strong>Sin abono mensual</strong>
+        <span>Uso gratuito hasta 250 productos. Solo se descuenta la comisión cuando concretás un cobro.</span>
       </div>
     </div>
     <div class="pricing-grid">
-      <!-- Starter -->
+      <!-- Free use -->
       <div class="price-card">
-        <div class="tier-name">Starter</div>
-        <div class="tier-desc">Para negocios chicos</div>
-        <div class="price"><span class="price-currency">$</span>29.900</div>
-        <div class="price-period">/mes por dispositivo</div>
+        <div class="tier-name">Uso gratuito</div>
+        <div class="tier-desc">Para empezar sin costos fijos</div>
+        <div class="price"><span class="price-currency">$</span>0</div>
+        <div class="price-period">sin abono</div>
         <div class="price-includes">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          Mantenimiento y soporte 24/7
+          Sin mantenimiento mensual
         </div>
         <ul class="price-features">
-          <li>1 dispositivo</li>
           <li>Hasta 250 productos</li>
           <li>Escaneo de códigos EAN-13</li>
           <li>Cobros con QR interoperable</li>
           <li>Gestión de caja</li>
+          <li>Inventario local cifrado</li>
           <li>Datos cifrados (AES-256)</li>
         </ul>
         <a href="#contacto" class="price-cta">Empezar ahora</a>
       </div>
-      <!-- Pro -->
+      <!-- Usage fee -->
       <div class="price-card popular">
-        <div class="popular-badge">Mas elegido</div>
-        <div class="tier-name">Pro</div>
-        <div class="tier-desc">Para comercios en crecimiento</div>
-        <div class="price"><span class="price-currency">$</span>50.000</div>
-        <div class="price-period">/mes</div>
+        <div class="popular-badge">Modelo Lekta</div>
+        <div class="tier-name">Comisión por uso</div>
+        <div class="tier-desc">Solo cuando cobrás</div>
+        <div class="price">2,5%</div>
+        <div class="price-period">por cobro QR</div>
         <div class="price-includes">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          Mantenimiento y soporte 24/7
+          Pagás cuando la usás
         </div>
         <ul class="price-features">
-          <li>Hasta 5 dispositivos</li>
-          <li>Hasta 500 productos</li>
-          <li>Escaneo de códigos EAN-13</li>
-          <li>Cobros con QR interoperable</li>
-          <li>Gestión de caja</li>
-          <li>Reportes avanzados</li>
-          <li>Soporte prioritario</li>
+          <li>No pagás si no vendés</li>
+          <li>Sin fee de activación</li>
+          <li>Sin contrato cautivo</li>
+          <li>La comisión se descuenta del cobro</li>
+          <li>Compatible con QR interoperable</li>
         </ul>
         <a href="#contacto" class="price-cta primary">Empezar ahora</a>
       </div>
-      <!-- Business -->
+      <!-- Reports -->
       <div class="price-card">
-        <div class="tier-name">Business</div>
-        <div class="tier-desc">Para cadenas chicas</div>
-        <div class="price"><span class="price-currency">$</span>99.900</div>
-        <div class="price-period">/mes</div>
+        <div class="tier-name">Reportes mensuales</div>
+        <div class="tier-desc">Opcional para analizar mejor</div>
+        <div class="price">A medida</div>
+        <div class="price-period">solo si los necesitás</div>
         <div class="price-includes">
           <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          Mantenimiento y soporte 24/7
+          Módulo opcional
         </div>
         <ul class="price-features">
-          <li>Hasta 15 dispositivos</li>
-          <li>Hasta 1.000 productos</li>
-          <li>Escaneo de códigos EAN-13</li>
-          <li>Cobros con QR interoperable</li>
-          <li>Gestión de caja multiusuario</li>
-          <li>Reportes avanzados</li>
-          <li>Soporte prioritario</li>
+          <li>Resumen mensual de ventas</li>
+          <li>Productos más vendidos</li>
+          <li>Comparación por período</li>
+          <li>Exportación para administración</li>
+          <li>Se activa sin cambiar tu uso diario</li>
         </ul>
-        <a href="#contacto" class="price-cta">Empezar ahora</a>
-      </div>
-      <!-- Full -->
-      <div class="price-card">
-        <div class="tier-name">Full</div>
-        <div class="tier-desc">Para operaciones grandes</div>
-        <div class="price"><span class="price-currency">$</span>250.000</div>
-        <div class="price-period">/mes</div>
-        <div class="price-includes">
-          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-          Mantenimiento y soporte 24/7
-        </div>
-        <ul class="price-features">
-          <li>Hasta 50 dispositivos</li>
-          <li>Hasta 2.500 productos</li>
-          <li>Escaneo de códigos EAN-13</li>
-          <li>Cobros con QR interoperable</li>
-          <li>Gestión de caja multiusuario</li>
-          <li>Reportes avanzados</li>
-          <li>Soporte dedicado 24/7</li>
-          <li>Onboarding personalizado</li>
-        </ul>
-        <a href="#contacto" class="price-cta">Empezar ahora</a>
+        <a href="#contacto" class="price-cta">Consultar reportes</a>
       </div>
     </div>
   </div>
@@ -889,7 +859,7 @@ footer {
         </div>
         <div>
           <h4>Keychain de iOS</h4>
-          <p>Los tokens de MercadoPago se guardan en el Keychain, el lugar más seguro del dispositivo.</p>
+          <p>Los tokens de Mercado Pago se guardan en el Keychain, el lugar más seguro del dispositivo.</p>
         </div>
       </div>
       <div class="security-item">
@@ -898,7 +868,7 @@ footer {
         </div>
         <div>
           <h4>OAuth 2.0 + PKCE</h4>
-          <p>La conexión con MercadoPago usa el protocolo más seguro de la industria, con verificación PKCE.</p>
+          <p>La conexión con Mercado Pago usa el protocolo más seguro de la industria, con verificación PKCE.</p>
         </div>
       </div>
       <div class="security-item">
@@ -918,8 +888,8 @@ footer {
 <section class="final-cta" id="contacto">
   <div class="container">
     <h2>Empezá a cobrar con tu celular</h2>
-    <p>Contactanos para conocer más sobre Lekta y elegir el plan ideal para tu negocio.</p>
-    <a href="mailto:fede16arg@gmail.com" class="btn-white">
+    <p>Contactanos para activar Lekta sin abono mensual y pagar solo cuando realmente la usás.</p>
+    <a href="mailto:federico.batistta@gmail.com" class="btn-white">
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       Escribinos
     </a>
@@ -936,11 +906,11 @@ footer {
       </div>
       <ul class="footer-links">
         <li><a href="#features">Funciones</a></li>
-        <li><a href="#planes">Planes</a></li>
+        <li><a href="#planes">Costos</a></li>
         <li><a href="#seguridad">Seguridad</a></li>
-        <li><a href="mailto:fede16arg@gmail.com">Contacto</a></li>
+        <li><a href="mailto:federico.batistta@gmail.com">Contacto</a></li>
       </ul>
-      <p class="footer-copy">&copy; 2025 Lekta. Todos los derechos reservados.</p>
+      <p class="footer-copy">&copy; 2026 Lekta. Todos los derechos reservados.</p>
     </div>
   </div>
 </footer>
@@ -955,11 +925,15 @@ window.addEventListener('scroll', () => {
 });
 
 toggle.addEventListener('click', () => {
-  nav.classList.toggle('menu-open');
+  const isOpen = nav.classList.toggle('menu-open');
+  toggle.setAttribute('aria-expanded', String(isOpen));
 });
 
 links.querySelectorAll('a').forEach(a => {
-  a.addEventListener('click', () => nav.classList.remove('menu-open'));
+  a.addEventListener('click', () => {
+    nav.classList.remove('menu-open');
+    toggle.setAttribute('aria-expanded', 'false');
+  });
 });
 </script>
 

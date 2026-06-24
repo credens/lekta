@@ -8,9 +8,10 @@ struct CheckoutView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var paymentMethod: PaymentMethod = .qrMP
-    @State private var preferenceId: String?
+    @State private var orderID: String?
+    @State private var preferenceID: String?
     @State private var qrImage: UIImage?
-    @State private var paymentStatus: PaymentStatus = .pending
+    @State private var orderStatus: BackendOrderStatus = .pending
     @State private var isGeneratingQR = false
     @State private var qrError: String?
     @State private var pollingTask: Task<Void, Never>?
@@ -58,7 +59,12 @@ struct CheckoutView: View {
         }
         .onChange(of: paymentMethod) { _, method in
             cancelPolling()
-            qrImage = nil; preferenceId = nil; qrError = nil; montoRecibido = ""
+            qrImage = nil
+            orderID = nil
+            preferenceID = nil
+            orderStatus = .pending
+            qrError = nil
+            montoRecibido = ""
             if method == .qrMP { Task { await generateQR() } }
         }
         .onAppear {
@@ -251,7 +257,7 @@ struct CheckoutView: View {
 
                     HStack(spacing: 8) {
                         ProgressView().scaleEffect(0.8)
-                        Text("Esperando confirmación de pago...")
+                        Text(statusMessage)
                             .font(.system(.caption, design: .rounded))
                             .foregroundStyle(.secondary)
                     }
@@ -441,26 +447,52 @@ struct CheckoutView: View {
         qrError = nil
         defer { isGeneratingQR = false }
         do {
-            let pref = try await MercadoPagoService.createPreference(items: checkoutVM.items)
-            preferenceId = pref.id
-            qrImage = makeQRImage(from: pref.sandboxInitPoint)
-            startPolling(preferenceId: pref.id)
+            let order = try await BackendCheckoutService.createOrder(
+                items: checkoutVM.items,
+                operatorID: cajaVM.currentOperadorName,
+                cashSessionID: cajaVM.horaApertura?.ISO8601Format()
+            )
+            orderID = order.orderID
+
+            let preference = try await BackendCheckoutService.createPreference(orderID: order.orderID)
+            preferenceID = preference.preferenceID
+
+            guard let qrURLString = preference.qrURLString else {
+                throw BackendServiceError.missingQRURL
+            }
+
+            qrImage = makeQRImage(from: qrURLString)
+            orderStatus = order.status
+            startPolling(orderID: order.orderID)
         } catch {
             qrError = "No se pudo generar el QR.\nVerificá tu conexión."
         }
     }
 
-    private func startPolling(preferenceId: String) {
+    private func startPolling(orderID: String) {
         pollingTask?.cancel()
         pollingTask = Task {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
                 guard !Task.isCancelled else { break }
-                if let status = try? await MercadoPagoService.checkPaymentStatus(preferenceId: preferenceId) {
-                    await MainActor.run { paymentStatus = status }
-                    if status == .approved {
+                if let response = try? await BackendCheckoutService.fetchOrderStatus(orderID: orderID) {
+                    await MainActor.run {
+                        orderStatus = response.status
+                    }
+
+                    switch response.status {
+                    case .approved:
                         await confirmPayment()
-                        break
+                        return
+                    case .pending:
+                        continue
+                    case .rejected, .cancelled, .expired:
+                        await MainActor.run {
+                            qrError = failureMessage(for: response.status)
+                            qrImage = nil
+                        }
+                        cancelPolling()
+                        return
                     }
                 }
             }
@@ -512,6 +544,34 @@ struct CheckoutView: View {
             .foregroundStyle(.secondary)
             .tracking(1.2)
             .padding(.horizontal)
+    }
+
+    private var statusMessage: String {
+        switch orderStatus {
+        case .pending:
+            return "Esperando confirmación de pago..."
+        case .approved:
+            return "Pago aprobado. Cerrando operación..."
+        case .rejected:
+            return "Pago rechazado"
+        case .cancelled:
+            return "Pago cancelado"
+        case .expired:
+            return "QR vencido"
+        }
+    }
+
+    private func failureMessage(for status: BackendOrderStatus) -> String {
+        switch status {
+        case .rejected:
+            return "El pago fue rechazado.\nPedile al cliente que lo reintente."
+        case .cancelled:
+            return "El pago fue cancelado."
+        case .expired:
+            return "El QR venció.\nGenerá uno nuevo para continuar."
+        case .pending, .approved:
+            return "No se pudo confirmar el pago."
+        }
     }
 }
 

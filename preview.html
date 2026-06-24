@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lekta — OAuth MP Preview</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#1a1a2e; display:flex; justify-content:center; align-items:flex-start;
+  min-height:100vh; padding:40px 20px;
+  font-family:-apple-system,BlinkMacSystemFont,'SF Pro Rounded',sans-serif;
+  gap:32px; flex-wrap:wrap;
+}
+:root { --amber:#FF9A00; --orange:#FF6B35; --brown:#8B5E3C; --green:#00B560; }
+
+.iphone {
+  width:390px; height:844px;
+  border-radius:54px; border:10px solid #222;
+  box-shadow:0 0 0 2px #444,0 30px 80px rgba(0,0,0,.6),inset 0 0 0 1px #555;
+  overflow:hidden; display:flex; flex-direction:column; position:relative;
+}
+.notch { position:absolute;top:0;left:50%;transform:translateX(-50%);width:126px;height:34px;background:#222;border-radius:0 0 20px 20px;z-index:100; }
+.phone-wrap { position:relative; }
+.phone-label { color:#aaa;font-size:13px;font-weight:500;text-align:center;margin-top:12px; }
+
+/* CONNECT SCREEN */
+.connect-screen {
+  flex:1; display:flex; flex-direction:column;
+  background:linear-gradient(135deg, #FF9A00 0%, #FF6B35 100%);
+  padding-top:50px;
+}
+.cs-spacer { flex:1; }
+.cs-logo { display:flex;flex-direction:column;align-items:center;gap:14px;padding:0 32px; }
+.cs-icon { font-size:64px; color:white; }
+.cs-title { font-size:32px;font-weight:700;color:white; }
+.cs-sub { font-size:15px;color:rgba(255,255,255,.8); }
+.cs-features { padding:0 32px 36px;display:flex;flex-direction:column;gap:16px; }
+.cs-row { display:flex;align-items:center;gap:14px; }
+.cs-row-icon { font-size:20px;color:white;width:28px;text-align:center;flex-shrink:0; }
+.cs-row-text { font-size:15px;color:rgba(255,255,255,.9); }
+.cs-bottom { padding:0 28px 52px;display:flex;flex-direction:column;gap:14px; }
+.connect-btn {
+  display:flex;align-items:center;justify-content:center;gap:12px;
+  padding:18px; border-radius:18px; background:white;
+  font-size:17px;font-weight:600;color:#FF6B35;
+  box-shadow:0 6px 20px rgba(0,0,0,.18); cursor:pointer;
+}
+.connect-btn span { font-size:20px; }
+.cs-disclaimer { font-size:12px;color:rgba(255,255,255,.65);text-align:center;line-height:1.5; }
+
+/* MP WEB LOGIN (simulated) */
+.mp-web {
+  flex:1; display:flex;flex-direction:column; background:white;
+}
+.mp-navbar { height:52px;background:#009EE3;display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;margin-top:50px; }
+.mp-navbar-back { color:white;font-size:20px; }
+.mp-navbar-url { flex:1;background:rgba(255,255,255,.2);border-radius:6px;padding:4px 10px;font-size:12px;color:white;font-family:monospace; }
+.mp-body { flex:1;padding:24px;display:flex;flex-direction:column;gap:20px; }
+.mp-logo { font-size:28px;font-weight:700;color:#009EE3;letter-spacing:-1px; }
+.mp-title { font-size:22px;font-weight:700;color:#1c1c1e;line-height:1.3; }
+.mp-subtitle { font-size:14px;color:#666; }
+.mp-app-card { background:#f5f5f5;border-radius:12px;padding:14px;display:flex;align-items:center;gap:12px; }
+.mp-app-icon { width:44px;height:44px;background:linear-gradient(135deg,#FF9A00,#FF6B35);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px; }
+.mp-app-name { font-size:15px;font-weight:600;color:#1c1c1e; }
+.mp-app-sub { font-size:12px;color:#666; }
+.mp-perms { display:flex;flex-direction:column;gap:8px; }
+.mp-perm { display:flex;align-items:center;gap:10px;font-size:14px;color:#444; }
+.mp-perm-dot { width:8px;height:8px;background:#009EE3;border-radius:50%;flex-shrink:0; }
+.mp-auth-btn {
+  padding:16px;border-radius:12px;
+  background:#009EE3;color:white;
+  font-size:16px;font-weight:600;text-align:center;cursor:pointer;
+  margin-top:auto;
+}
+
+/* HOME (post-auth) */
+.home-screen { flex:1;display:flex;flex-direction:column;overflow:hidden;background:#FFF8F0; }
+.status-bar { height:50px;display:flex;align-items:flex-end;justify-content:space-between;padding:0 28px 8px;background:#FFF8F0;flex-shrink:0; }
+.home-header { padding:20px 24px 24px;text-align:center; }
+.store-name { font-size:22px;font-weight:700;color:var(--brown);margin-bottom:4px; }
+.date-lbl { font-size:14px;color:#8e8e93;margin-bottom:12px; }
+.badge { display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;color:white; }
+.badge.closed { background:#8e8e93; }
+.actions { padding:0 24px;display:flex;flex-direction:column;gap:14px; }
+.action-btn { display:flex;align-items:center;gap:16px;padding:18px 20px;border-radius:18px;cursor:pointer;box-shadow:0 5px 14px rgba(0,0,0,.08); }
+.action-btn .icon { font-size:30px;width:44px;text-align:center;flex-shrink:0; }
+.action-btn .text h3 { font-size:16px;font-weight:600; }
+.action-btn .text p  { font-size:12px;opacity:.8;margin-top:1px; }
+.action-btn .chev { font-size:13px;opacity:.6;margin-left:auto; }
+.btn-green  { background:var(--green);color:white;box-shadow:0 5px 14px rgba(0,181,96,.3); }
+.btn-disabled { background:rgba(255,255,255,.55);color:#8e8e93;box-shadow:none; }
+.btn-neutral { background:white;color:#1c1c1e; }
+.toolbar-dots { position:absolute;top:56px;right:20px;font-size:20px;color:var(--brown); }
+</style>
+</head>
+<body>
+
+<!-- PHONE 1: Pantalla de conexión (primera vez) -->
+<div class="phone-wrap">
+  <div class="notch"></div>
+  <div class="iphone">
+    <div class="connect-screen">
+      <div class="cs-spacer"></div>
+      <div class="cs-logo">
+        <div class="cs-icon">⬛</div>
+        <div class="cs-title">Lekta</div>
+        <div class="cs-sub">Tu negocio en el bolsillo</div>
+      </div>
+      <div class="cs-spacer"></div>
+      <div class="cs-features">
+        <div class="cs-row"><span class="cs-row-icon">⬛</span><span class="cs-row-text">Cobrar con QR de MercadoPago</span></div>
+        <div class="cs-row"><span class="cs-row-icon">📊</span><span class="cs-row-text">Ver pagos y conciliar caja</span></div>
+        <div class="cs-row"><span class="cs-row-icon">🔒</span><span class="cs-row-text">Tus datos siempre seguros</span></div>
+      </div>
+      <div class="cs-bottom">
+        <div class="connect-btn"><span>🔗</span> Conectar con MercadoPago</div>
+        <div class="cs-disclaimer">Serás redirigido a MercadoPago para autorizar el acceso. Solo se hace una vez.</div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">Primera vez — Conectar con MP</div>
+</div>
+
+<!-- PHONE 2: Browser de MP (ASWebAuthenticationSession) -->
+<div class="phone-wrap">
+  <div class="notch"></div>
+  <div class="iphone" style="background:white;">
+    <div class="mp-web">
+      <div class="mp-navbar">
+        <span class="mp-navbar-back">‹</span>
+        <span class="mp-navbar-url">auth.mercadopago.com.ar/authorization</span>
+      </div>
+      <div class="mp-body">
+        <div class="mp-logo">mercado pago</div>
+        <div>
+          <div class="mp-title">Autorizar acceso a tu cuenta</div>
+          <div class="mp-subtitle" style="margin-top:6px;">La siguiente app quiere acceder a tu cuenta de MercadoPago:</div>
+        </div>
+        <div class="mp-app-card">
+          <div class="mp-app-icon">⬛</div>
+          <div>
+            <div class="mp-app-name">Lekta</div>
+            <div class="mp-app-sub">Aplicación de gestión de negocio</div>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:#444;margin-bottom:10px;">Permisos solicitados:</div>
+          <div class="mp-perms">
+            <div class="mp-perm"><div class="mp-perm-dot"></div>Crear preferencias de pago (QR)</div>
+            <div class="mp-perm"><div class="mp-perm-dot"></div>Consultar estado de pagos</div>
+            <div class="mp-perm"><div class="mp-perm-dot"></div>Ver historial de transacciones</div>
+          </div>
+        </div>
+        <div class="mp-auth-btn">Permitir acceso</div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">Browser de MP (ASWebAuthenticationSession)</div>
+</div>
+
+<!-- PHONE 3: Home después de conectar, con menú ⋯ -->
+<div class="phone-wrap">
+  <div class="notch"></div>
+  <div class="iphone">
+    <div class="home-screen">
+      <div class="status-bar">
+        <span style="font-size:15px;font-weight:600;color:#1c1c1e;">9:41</span>
+      </div>
+      <div class="toolbar-dots">⋯</div>
+      <div class="home-header">
+        <div class="store-name">🏪 Mi Negocio</div>
+        <div class="date-lbl">Viernes, 6 de junio</div>
+        <span class="badge closed">🔒 Caja cerrada</span>
+      </div>
+      <div class="actions">
+        <div class="action-btn btn-green">
+          <span class="icon">💰</span><div class="text"><h3>Abrir Caja</h3><p>Habilita cobros y conecta con MP</p></div><span class="chev">›</span>
+        </div>
+        <div class="action-btn btn-disabled">
+          <span class="icon">📷</span><div class="text"><h3>Cobrar</h3><p>Escanear y procesar ventas</p></div><span class="chev">›</span>
+        </div>
+        <div class="action-btn btn-disabled">
+          <span class="icon">🔒</span><div class="text"><h3>Cerrar Caja</h3><p>Cierra sesión y concilia MP</p></div><span class="chev">›</span>
+        </div>
+        <div class="action-btn btn-neutral">
+          <span class="icon">📦</span><div class="text"><h3>Inventario</h3><p>Productos, stock y precios</p></div><span class="chev">›</span>
+        </div>
+      </div>
+      <!-- Menu flotante simulado -->
+      <div style="position:absolute;top:80px;right:16px;background:white;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);padding:4px;min-width:220px;z-index:50;">
+        <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;color:#FF4444;font-size:14px;font-weight:500;">
+          <span>🔗</span> Desconectar MercadoPago
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="phone-label">Home — menú desconectar (⋯)</div>
+</div>
+
+</body>
+</html>
